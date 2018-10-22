@@ -1,0 +1,58 @@
+// ----- DEBUGGING ====>
+@import ../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+
+debug = 1; // 0 => No console. 1 => Display console messages for debugging.
+clean = 1; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+
+msg_clean();
+// <==== DEBUGGING -----
+
+function getCharByPosition(posInString, inputString) local(posInString, inputString) (
+	str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), 1, strlen(inputString)-posInString+1);
+);
+
+function substringByLength(posInString, smolStringlength, inputString) local(posInString, smolStringlength, inputString, outputString) (
+	strlen(outputString = str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), smolStringlength, strlen(inputString)-posInString)) < smolStringlength ? str_delsub(strcpy(#, inputString), 0, strlen(inputString)-smolStringlength) : outputString;
+);
+
+function substring(indexStart, indexEnd, inputString) local(indexStart, indexEnd, inputString, outputString, indexDistance) (
+	strlen(outputString = str_delsub(str_delsub(strcpy(#, inputString), 0, indexStart), indexDistance = (min(indexEnd, strlen(inputString))-indexStart), strlen(inputString))) < indexDistance ? str_delsub(strcpy(#, inputString), 0, strlen(inputString)-(min(indexEnd, strlen(inputString)))) : outputString;
+);
+
+string = "1.0000,4.6780,2.0000,5.7823";
+lastString = "";
+lastIterate = 0;
+
+msg_s(substring(5, strlen(string)-1, string));
+
+i = 0;
+loop(strlen(string),
+	//msg_s(getCharByPosition(i, string));
+	//msg_s(substringByLength(i, 6, string));
+	i+=1;
+
+
+
+
+
+
+//	while(strcmp(str_getchar(string, iterate, 'c'), lastString) < 1) (
+//		iterate += 1;
+//	);
+//	msg_d(iterate);
+//	char = str_getchar(string, iterate, 'c');
+//	lastString = strcat(lastString, char);
+//	msg_s(lastString);
+//	stricmp(char, ",") == 1 ? (
+//		lastIterate == 0 ? (
+//			lastIterate = iterate;
+//			strcpy_substr(#substring, string, 0, iterate);
+//			ShowConsoleMsg(substring);
+//		):(
+//			strcpy_substr(#substring, string, lastIterate, iterate);
+//			ShowConsoleMsg(substring);
+//		);
+//	);
+	//msg_d(stricmp(char, ","));
+	//iterate += 1;
+);

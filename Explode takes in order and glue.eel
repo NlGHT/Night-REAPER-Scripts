@@ -1,0 +1,22 @@
+PreventUIRefresh(1);
+Undo_BeginBlock();
+Main_OnCommand(40289, 0); // Unselect all items
+Main_OnCommand(40297, 0); // Unselect all tracks
+Main_OnCommand(40528, 0); // Select item under cursor
+origitem = GetSelectedMediaItem(0, 0);
+take_count = CountTakes(origitem);
+origitemnumber = GetMediaItemInfo_Value(origitem, "IP_ITEMNUMBER");
+origitemtrack = GetMediaItemTrack(origitem);
+
+Main_OnCommand(40643, 0); // Explode items in order
+Main_OnCommand(40289, 0); // Unselect all items (just in case)
+
+i = 0;
+loop(take_count,
+	tempitem = GetTrackMediaItem(origitemtrack, origitemnumber+i);
+	SetMediaItemSelected(tempitem, 1);
+	i += 1;
+);
+Main_OnCommand(40362, 0); // Glue items, ignoring time selection
+Undo_EndBlock("Explode takes in order and glue them", 0);
+PreventUIRefresh(-1);

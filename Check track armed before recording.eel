@@ -1,0 +1,25 @@
+trackCount = CountTracks(0);
+
+track_armed = 0;
+
+i = 0;
+loop(trackCount,
+	tr = GetTrack(0, i);
+	rec = GetMediaTrackInfo_Value(tr, "I_RECARM");
+	rec == 1 ? (
+		track_armed = 1;
+	);
+);
+
+	
+track_armed == 0 ? (
+	CountSelectedTracks(0) == 0 ? (
+		lastTouchedTrack = GetLastTouchedTrack();
+		SetMediaTrackInfo_Value(lastTouchedTrack, "I_RECARM", 1);
+	):(
+		selectedTrack = GetSelectedTrack(0, 0);
+		SetMediaTrackInfo_Value(selectedTrack, "I_RECARM", 1);
+	);
+);
+
+Main_OnCommand(1013, 0);

@@ -1,0 +1,139 @@
+// based on EEL script 6.9.2014 by spk77
+
+// Link to forum post by kuus0 https://forum.cockos.com/showthread.php?t=146114
+
+
+// ----- DEBUGGING ====>
+@import ../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+
+debug = 1; // 0 => No console. 1 => Display console messages for debugging.
+clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+
+//msg_clean();
+// <==== DEBUGGING -----
+
+
+
+
+function get_float_from_string(str)
+(
+    matchi("*?-*?%{float_value}f*?", str) ? ( // first, try to match for a negative value, i.e. a (series of) numeric character(s), *directly* preceded with '-' character)
+        -float_value; // apply negative sign, return float value
+    ) : ( // else, just try to match a (positive) value, i.e. a (series of) numeric character(s)
+        matchi("*?%{float_value}f*?", str) ? 
+        (
+            float_value; // return float value
+        );
+    );
+);
+
+function get_int_from_string(str)
+(
+    matchi("*?-*?%{float_value}d*?", str) ? ( // first, try to match for a negative value, i.e. a (series of) numeric character(s), *directly* preceded with '-' character)
+        -float_value; // apply negative sign, return float value
+    ) : ( // else, just try to match a (positive) value, i.e. a (series of) numeric character(s)
+        matchi("*?%{float_value}d*?", str) ? 
+        (
+            float_value; // return float value
+        );
+    );
+);
+
+function getStringFromFloat(float) (
+	sprintf(#, "%f", float);
+);
+
+
+function checkCallstack(ms) local(saved_time_after) (
+	//msg_s("checkCallstack()");
+	ms /= 1000;
+	time_precise() - script_time < ms ? (
+		// Wait until ms time up
+		GetExtState(saved_time_after1, sectioncode, "time");
+		floatSavedTimeAfter1 = get_float_from_string(saved_time_after1);
+		
+		script_time == floatSavedTimeAfter1 ? (
+			//msg_s("Repeat Callstack");
+			defer("checkCallstack(callstack_rate)");
+		):(
+			GetExtState(saved_time_after, sectioncode, "time");
+			floatSavedTimeAfter = get_float_from_string(saved_time_after);
+			//msg_f(floatSavedTimeAfter);
+			//msg_f(script_time);
+			script_time == floatSavedTimeAfter ? (
+				defer("checkCallstack(callstack_rate)");
+				msg_s("a");
+			):(
+				// Button up
+				// Don't send note offs because another script has started
+				//msg_s("b");
+				msg_s("Script continued");
+			);
+		);
+	):(
+		/*
+		switch == 0 ? (
+			defer("checkCallstack(callstack_rate)");
+			switch = 1;
+		);
+		*/
+		// This runs after the delay time
+		GetExtState(saved_time_after, sectioncode, "time");
+		floatSavedTimeAfter = get_float_from_string(saved_time_after);
+		msg_f(floatSavedTimeAfter);
+		msg_f(script_time);
+		script_time == floatSavedTimeAfter ? (
+			DeleteExtState(sectioncode, "time", 1);
+			//msg_s("c");
+			msg_s("Script ended");
+		):(
+			// Button up
+			// Don't send note offs because another script has started
+			msg_s("d");
+		);
+	);
+);
+
+/*
+function getTimeFromExtState() (
+
+)
+*/
+
+
+sectioncode = "12345";
+callstack_rate = 1000;
+compensationextstate = 5;
+time_precise(script_time);
+
+sprintf(str_script_time, "%f", script_time);
+
+switch = 0;
+
+// Check ExtStates
+
+HasExtState(sectioncode, "time") ? (
+	SetExtState(sectioncode, "time", str_script_time, 0);
+	GetExtState(saved_time, sectioncode, "time");
+	floatSavedTime = get_float_from_string(saved_time);
+	script_time > floatSavedTime ? (
+		//DeleteExtState(sectioncode, "time", 0);
+		//sleep(compensationextstate);
+		//msg_s("1");
+		defer("checkCallstack(callstack_rate)");
+	):(
+		//DeleteExtState(sectioncode, "time", 0);
+		//sleep(compensationextstate);
+		//SetExtState(sectioncode, "time", str_script_time, 0);
+		//msg_s("2");
+		defer("checkCallstack(callstack_rate)");
+	);
+):(
+	SetExtState(sectioncode, "time", str_script_time, 0);
+	//DeleteExtState(sectioncode, "time", 0);
+	//SetExtState(sectioncode, "time", str_script_time, 0);
+	//sleep(compensationextstate);
+	//msg_s("3");
+	msg_s("Script started");
+	defer("checkCallstack(callstack_rate)");
+);
