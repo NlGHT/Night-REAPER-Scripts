@@ -1,8 +1,8 @@
 // ----- DEBUGGING ====>
-@import ../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
 
 debug = 1; // 0 => No console. 1 => Display console messages for debugging.
-clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+clean = 1; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
 
 msg_clean();
 // <==== DEBUGGING -----
@@ -29,14 +29,14 @@ Feel free to message me with feedback, bugs and anything you do with it on Disco
 
 sectioncode = "lasso_tool";
 callstack_rate = 500;
-callstack_rate_after_init = 100;
+callstack_rate_after_init = 20;
 
 
 
 
 
 function getCharByPosition(posInString, inputString) local(posInString, inputString) (
-	str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), 1, strlen(inputString)-posInString+1);
+	str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), 1, strlen(inputString));
 );
 
 function substringByLength(posInString, smolStringlength, inputString) local(posInString, smolStringlength, inputString, outputString) (
@@ -101,7 +101,7 @@ function getExtStateKeyCount() local(increment) (
 	increment;
 );
 
-function save_track_and_mousepos() local(mouse_pos, track_number, string_track_number, string_mouse_pos, tr) (
+function save_track_and_mousepos() local(mouse_pos, track_number, string_track_number, string_mouse_pos, tr, i, just_track_number) (
 	extension_api("BR_GetMouseCursorContext", #window, #segment, #details, 50);
 
 	mouse_pos = extension_api("BR_GetMouseCursorContext_Position");
@@ -111,8 +111,15 @@ function save_track_and_mousepos() local(mouse_pos, track_number, string_track_n
   		tr ? (
   			track_number = GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER");
   			string_track_number = sprintf(#, "%f", track_number);
+  			i = 0;
+  			loop(strlen(string_track_number),
+  				strcmp(getCharByPosition(i, string_track_number), ".") == 0 ? (
+  					just_track_number = substring(0, i, string_track_number);
+ 				);
+  				i+=1;
+  			);
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
-  			SetExtState(sectioncode, sprintf(#, "%d", getExtStateKeyCount()+1), string_track_number, 0);
+  			SetExtState(sectioncode, sprintf(#, "%d", getExtStateKeyCount()+1), just_track_number, 0);
   			SetExtState(sectioncode, sprintf(#, "%d", getExtStateKeyCount()+1), string_mouse_pos, 0);
   		);
 	);
@@ -137,30 +144,62 @@ function background_tasks() (
 		DeleteExtState("lasso_tool_press_status", "init", 1);
 	);
 	save_track_and_mousepos();
+
 );
 
-function end_tasks() local(increment, incrementString, mousePosExtState, trackNumExtState) (
+tracksGoneOver = "";
+
+function end_tasks() local(extStateKey, extStateKeyString, mousePosExtState, trackNumExtState) (
 
 	// Ending
 
-	increment = 1;
-	while(HasExtState(sectioncode, sprintf(#, "%d", increment))) (
-		incrementString = sprintf(#, "%d", increment);
-		increment % 2 == 0 ? (
+	extStateKey = 1;
+	latestCommaPosition = 0;
+	previousCommaPosition = 0;
+	while(HasExtState(sectioncode, sprintf(#, "%d", extStateKey))) (
+		extStateKeyString = sprintf(#, "%d", extStateKey);
+		extStateKey % 2 == 0 ? (
 			// Even key
-			GetExtState(trackNumExtState, sectioncode, incrementString);
-			msg_s(trackNumExtState);
-			msg_s(incrementString);
-			DeleteExtState(sectioncode, incrementString, 1);
-		):(
-			GetExtState(mousePosExtState, sectioncode, incrementString);
+			GetExtState(mousePosExtState, sectioncode, extStateKeyString);
 			msg_s(mousePosExtState);
-			msg_s(incrementString);
-			DeleteExtState(sectioncode, incrementString, 1);
+			DeleteExtState(sectioncode, extStateKeyString, 1);
+		):(
+			
+			GetExtState(#trackNumExtState, sectioncode, extStateKeyString);
+			
+			uniqueTracksIter = 0;
+			strlen(tracksGoneOver) == 0 ? (
+				// If first term
+				toAdd = strcat(#trackNumExtState, ",");
+				tracksGoneOver = strcat(#tracksGoneOver, toAdd);
+			):(
+				// If not first term
+				loop(strlen(tracksGoneOver),
+					strcmp(getCharByPosition(uniqueTracksIter, tracksGoneOver), ",") == 0 ? (
+
+						previousCommaPosition = latestCommaPosition;
+						latestCommaPosition = uniqueTracksIter;
+						trackInArray = substring(previousCommaPosition, latestCommaPosition, tracksGoneOver);
+						msg_s(trackInArray);
+						msg_s(trackInArray);
+						strcmp(trackInArray, trackNumExtState) != 0 ? (
+							msg_s("It's different!");
+							toAdd = strcat(#trackNumExtState, ",");
+							tracksGoneOver = strcat(#tracksGoneOver, toAdd);
+						);
+					);
+
+					uniqueTracksIter += 1;
+				);
+			);
+
+			DeleteExtState(sectioncode, extStateKeyString, 1);
 		);
 
-		increment += 1;
+		extStateKey += 1;
 	);
+
+	msg_s(tracksGoneOver);
 );
 
 
