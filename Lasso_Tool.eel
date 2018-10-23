@@ -130,7 +130,7 @@ function init_press() (
 	// Start
 
 	save_track_and_mousepos();
-	msg_d(getExtStateKeyCount());
+	//msg_d(getExtStateKeyCount());
 	SetExtState("lasso_tool_press_status", "init", "pressed", 0);
 );
 
@@ -157,16 +157,18 @@ function end_tasks() local(extStateKey, extStateKeyString, mousePosExtState, tra
 	latestCommaPosition = 0;
 	previousCommaPosition = 0;
 	while(HasExtState(sectioncode, sprintf(#, "%d", extStateKey))) (
+		//msg_s("Hmmmmmmmmmmmmmmmmmmmmm");
+		//msg_d(extStateKey);
 		extStateKeyString = sprintf(#, "%d", extStateKey);
 		extStateKey % 2 == 0 ? (
 			// Even key
 			GetExtState(mousePosExtState, sectioncode, extStateKeyString);
-			msg_s(mousePosExtState);
+			//msg_s(mousePosExtState);
 			DeleteExtState(sectioncode, extStateKeyString, 1);
 		):(
 			
 			GetExtState(#trackNumExtState, sectioncode, extStateKeyString);
-			
+			//msg_s(trackNumExtState);
 			uniqueTracksIter = 0;
 			strlen(tracksGoneOver) == 0 ? (
 				// If first term
@@ -174,23 +176,63 @@ function end_tasks() local(extStateKey, extStateKeyString, mousePosExtState, tra
 				tracksGoneOver = strcat(#tracksGoneOver, toAdd);
 			):(
 				// If not first term
+				//msg_s(tracksGoneOver);
+				tracksSelected = 0;
+				commaCountIterater = 0;
+				loop(strlen(tracksGoneOver),
+					strcmp(getCharByPosition(commaCountIterater, tracksGoneOver), ",") == 0 ? (
+						tracksSelected += 1;
+					);
+					commaCountIterater += 1;
+				);
+
+				doesTermExistAlready = 0;
+				testCommaCount = 0;
 				loop(strlen(tracksGoneOver),
 					strcmp(getCharByPosition(uniqueTracksIter, tracksGoneOver), ",") == 0 ? (
 
-						previousCommaPosition = latestCommaPosition;
+
+
+						previousCommaPosition = latestCommaPosition+1;
 						latestCommaPosition = uniqueTracksIter;
-						trackInArray = substring(previousCommaPosition, latestCommaPosition, tracksGoneOver);
-						msg_s(trackInArray);
-						msg_s(trackInArray);
-						strcmp(trackInArray, trackNumExtState) != 0 ? (
-							msg_s("It's different!");
-							toAdd = strcat(#trackNumExtState, ",");
-							tracksGoneOver = strcat(#tracksGoneOver, toAdd);
+						testCommaCount > 0 ? (
+							// For some reason the substring function was messing up the first seperation
+							trackInArray = substring(previousCommaPosition, latestCommaPosition, tracksGoneOver);
+						):(
+							trackInArray = substring(0, latestCommaPosition, tracksGoneOver);
+						);
+						
+						//msg_s(tracksGoneOver);
+						//msg_s(trackInArray);
+						//msg_s(#trackNumExtState);
+
+						strcmp(trackInArray, #trackNumExtState) == 0 ? (
+							// Does the term already exist in the string?
+							doesTermExistAlready = 1;
+							//msg_d(doesTermExistAlready);
+						);
+
+						// Here for last time through loop
+						testCommaCount += 1;
+						testCommaCount == tracksSelected ? (
+							//msg_s(trackInArray);
+							detectSimilarIter = 0;
+							loop(strlen(tracksGoneOver),
+
+								detectSimilarIter += 1;
+							);
+							!doesTermExistAlready ? (
+								//msg_s("It's different!");
+								toAdd = strcat(#trackNumExtState, ",");
+								tracksGoneOver = strcat(#tracksGoneOver, toAdd);
+								//msg_s(tracksGoneOver);
+							);
 						);
 					);
 
 					uniqueTracksIter += 1;
 				);
+				//msg_d(testCommaCount);
 			);
 
 			DeleteExtState(sectioncode, extStateKeyString, 1);
@@ -200,6 +242,7 @@ function end_tasks() local(extStateKey, extStateKeyString, mousePosExtState, tra
 	);
 
 	msg_s(tracksGoneOver);
+	msg_d(tracksSelected);
 );
 
 
