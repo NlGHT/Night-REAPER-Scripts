@@ -1,33 +1,19 @@
-// ----- DEBUGGING ====>
-@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
 
-debug = 1; // 0 => No console. 1 => Display console messages for debugging.
-clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
-
-msg_clean();
-// <==== DEBUGGING -----
-
-
-/* Template and Script developed by Night */
+/* Script developed by Night */
 
 /*
 
 How it works:
-1.  Create a sectioncode which should be completely unique.
-	If not then it's probably not too much trouble unless another script uses the same Section Code AND a key with name "time".
-	Otherwise just change every ExtState modification to what you want.
-2.  Set a callstack rate, this is the delay(ms) after a key press until the script ends.
-	By default this is set to 500 which appears to be the time taken for fast key input to sink in after initial press.
-3.  Change the init_press() function for what to happen on the initial script run.
-4.  Change what to run in the background with background_tasks().
-5.  Change what to run after the key is released inside end_tasks().
-
-The script's initial start time is stored within script_time, string format in str_script_time.
+1.  On initial run and hold down, select "New Instance" in the popup and "Remember decision".
+2.  Paint a loop around/ontop of the items you wish to select while holding down the button.
 
 Feel free to message me with feedback, bugs and anything you do with it on Discord! @Night#5537
 
 */
 
+
+
+// Unless you are a scripter, avoid modifying these
 sectioncode = "lasso_tool";
 callstack_rate = 500;
 callstack_rate_after_init = 20;
@@ -124,13 +110,13 @@ function init_press() (
 	Main_OnCommand(40289, 0);
 	saveTrackAndMousePosition();
 
-	SetExtState("lasso_tool_press_status", "init", "pressed", 0);
+	SetExtState(sectioncode, "init", "pressed", 0);
 );
 
 function background_tasks() (
-	HasExtState("lasso_tool_press_status", "init") ? (
+	HasExtState(sectioncode, "init") ? (
 		callstack_rate = callstack_rate_after_init;
-		DeleteExtState("lasso_tool_press_status", "init", 1);
+		DeleteExtState(sectioncode, "init", 1);
 	);
 	saveTrackAndMousePosition();
 );
@@ -221,7 +207,7 @@ function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
 		GetExtState(saved_time_after, sectioncode, "time");
 		floatSavedTimeAfter = get_float_from_string(saved_time_after);
 		script_time == floatSavedTimeAfter ? (
-			HasExtState("lasso_tool_press_status", "init") ? (
+			HasExtState(sectioncode, "init") ? (
 				saveTrackAndMousePosition();
 			);
 			defer("checkCallstack(callstack_rate)");
