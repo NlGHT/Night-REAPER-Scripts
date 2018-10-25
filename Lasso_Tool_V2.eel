@@ -70,7 +70,8 @@ function getStringFromInt(int) (
 
 
 
-function saveTrackAndMousePosition() local(tr) (
+function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_track_number, i, just_track_number, string_mouse_pos)
+(
 	extension_api("BR_GetMouseCursorContext", #window, #segment, #details, 50);
 
 	mouse_pos = extension_api("BR_GetMouseCursorContext_Position");
@@ -121,7 +122,8 @@ function background_tasks() (
 	saveTrackAndMousePosition();
 );
 
-function end_tasks() local(tr) (
+function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, countCommas, biggestMousePosition, smallesMousePosition, previousCommaPosition, mousePosInArray, floatArrayTerm, tr, k, item, itemStart, itemEnd)
+(
 	trackCount = CountTracks(0);
 
 	i = 1;
