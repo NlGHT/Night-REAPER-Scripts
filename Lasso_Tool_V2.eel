@@ -103,19 +103,13 @@ function saveTrackAndMousePosition() local(tr) (
   				i+=1;
   			);
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
-  			msg_s(just_track_number);
   			HasExtState(sectioncode, just_track_number) ? (
   				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
   				savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
   				savedTimesForTrack = strcat(#savedTimesForTrack, ",");
-  				msg_s("Track Exists");
-  				msg_s(savedTimesForTrack);
   				SetExtState(sectioncode, just_track_number, savedTimesForTrack, 0);
   			):(
   				string_mouse_pos = strcat(string_mouse_pos, ",");
-  				msg_s("Track doesn't exist");
-  				msg_s(string_mouse_pos);
-  				msg_s(just_track_number);
   				SetExtState(sectioncode, just_track_number, string_mouse_pos, 0);
   			);
   		);
@@ -127,7 +121,7 @@ function saveTrackAndMousePosition() local(tr) (
 
 
 function init_press() (
-
+	Main_OnCommand(40289, 0);
 	saveTrackAndMousePosition();
 
 	SetExtState("lasso_tool_press_status", "init", "pressed", 0);
@@ -146,14 +140,9 @@ function end_tasks() local(tr) (
 
 	i = 1;
 	loop(trackCount,
-		msg_s("Loopty-loop");
-		//msg_d(i);
 		stringTrack = getStringFromInt(i);
 		HasExtState(sectioncode, stringTrack) ? (
-			msg_s("Selected track loop");
-			//GetExtState(#allTrackMousePositions, lasso_tool, stringTrack);
 			GetExtState(#allTrackMousePositions, sectioncode, stringTrack);
-			//msg_s(#allTrackMousePositions);
 			j = 0;
 			latestCommaPosition = 0;
 			countCommas = 0;
@@ -181,27 +170,33 @@ function end_tasks() local(tr) (
 					):(
 						smallesMousePosition = min(smallesMousePosition, floatArrayTerm);
 					);
-					msg_f(biggestMousePosition);
-					msg_f(smallesMousePosition);
+					
 					countCommas += 1;
 				);
 				j += 1;
 			);
 
-			//DeleteExtState(lasso_tool, stringTrack, 1);
-
-			tr = GetTrack(0, i);
+			tr = GetTrack(0, i-1);
 			CountTrackMediaItems(tr) > 0 ? (
+
 				k = 0;
 				loop(CountTrackMediaItems(tr),
-					msg_d(k);
 					item = GetTrackMediaItem(tr, k);
 					itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 					itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
 
-					smallesMousePosition <= itemStart || biggestMousePosition >= itemEnd ? (
+					smallesMousePosition <= itemStart && biggestMousePosition >= itemEnd ? (
 						SetMediaItemInfo_Value(item, "B_UISEL", 1);
+					):(
+						smallesMousePosition <= itemEnd && smallesMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
+
+						biggestMousePosition <= itemEnd && biggestMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
 					);
+
 				);
 			);
 			DeleteExtState(sectioncode, stringTrack, 1);
@@ -209,7 +204,6 @@ function end_tasks() local(tr) (
 
 		i += 1;
 	);
-	msg_s("Updated!");
 
 	UpdateArrange();
 );
@@ -218,7 +212,7 @@ function end_tasks() local(tr) (
 
 
 
-
+// All the running in background stuff is here
 
 
 function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
@@ -227,6 +221,9 @@ function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
 		GetExtState(saved_time_after, sectioncode, "time");
 		floatSavedTimeAfter = get_float_from_string(saved_time_after);
 		script_time == floatSavedTimeAfter ? (
+			HasExtState("lasso_tool_press_status", "init") ? (
+				saveTrackAndMousePosition();
+			);
 			defer("checkCallstack(callstack_rate)");
 		):(
 			background_tasks();
