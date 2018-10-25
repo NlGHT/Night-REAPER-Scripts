@@ -104,19 +104,19 @@ function saveTrackAndMousePosition() local(tr) (
   			);
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
   			msg_s(just_track_number);
-  			HasExtState(lasso_tool, just_track_number) ? (
-  				GetExtState(#savedTimesForTrack, lasso_tool, just_track_number);
+  			HasExtState(sectioncode, just_track_number) ? (
+  				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
   				savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
   				savedTimesForTrack = strcat(#savedTimesForTrack, ",");
   				msg_s("Track Exists");
   				msg_s(savedTimesForTrack);
-  				SetExtState(lasso_tool, just_track_number, savedTimesForTrack, 0);
+  				SetExtState(sectioncode, just_track_number, savedTimesForTrack, 0);
   			):(
   				string_mouse_pos = strcat(string_mouse_pos, ",");
   				msg_s("Track doesn't exist");
   				msg_s(string_mouse_pos);
   				msg_s(just_track_number);
-  				SetExtState(lasso_tool, just_track_number, string_mouse_pos, 0);
+  				SetExtState(sectioncode, just_track_number, string_mouse_pos, 0);
   			);
   		);
 	);
@@ -149,20 +149,18 @@ function end_tasks() local(tr) (
 		msg_s("Loopty-loop");
 		//msg_d(i);
 		stringTrack = getStringFromInt(i);
-		msg_s(stringTrack);
-		HasExtState(lasso_tool, stringTrack) ? (
+		HasExtState(sectioncode, stringTrack) ? (
 			msg_s("Selected track loop");
-			msg_d(i);
 			//GetExtState(#allTrackMousePositions, lasso_tool, stringTrack);
-			GetExtState(#allTrackMousePositions, lasso_tool, stringTrack);
-			msg_s(allTrackMousePositions);
+			GetExtState(#allTrackMousePositions, sectioncode, stringTrack);
+			//msg_s(#allTrackMousePositions);
 			j = 0;
 			latestCommaPosition = 0;
 			countCommas = 0;
 			biggestMousePosition = 0;
 			smallesMousePosition = 0;
-			loop(strlen(allTrackMousePositions),
-				strcmp(getCharByPosition(j, allTrackMousePositions), ",") == 0 ? (
+			loop(strlen(#allTrackMousePositions),
+				strcmp(getCharByPosition(j, #allTrackMousePositions), ",") == 0 ? (
 
 
 
@@ -170,14 +168,21 @@ function end_tasks() local(tr) (
 					latestCommaPosition = j;
 					countCommas > 0 ? (
 						// For some reason the substring function was messing up the first seperation
-						mousePosInArray = substring(previousCommaPosition, latestCommaPosition, allTrackMousePositions);
+						mousePosInArray = substring(previousCommaPosition, latestCommaPosition, #allTrackMousePositions);
 					):(
-						mousePosInArray = substring(0, latestCommaPosition, allTrackMousePositions);
+						mousePosInArray = substring(0, latestCommaPosition, #allTrackMousePositions);
 					);
 
-					biggestMousePosition = max(biggestMousePosition, get_float_from_string(mousePosInArray));
-					smallesMousePosition = min(smallesMousePosition, get_float_from_string(mousePosInArray));
+					floatArrayTerm = get_float_from_string(mousePosInArray);
 
+					biggestMousePosition = max(biggestMousePosition, floatArrayTerm);
+					smallesMousePosition == 0 ? (
+						smallesMousePosition = floatArrayTerm;
+					):(
+						smallesMousePosition = min(smallesMousePosition, floatArrayTerm);
+					);
+					msg_f(biggestMousePosition);
+					msg_f(smallesMousePosition);
 					countCommas += 1;
 				);
 				j += 1;
@@ -193,19 +198,13 @@ function end_tasks() local(tr) (
 					item = GetTrackMediaItem(tr, k);
 					itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 					itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-					biggestMousePosition == 0 ? (
-						biggestMousePosition = smallesMousePosition;
-					);
-					smallesMousePosition == 0 ? (
-						smallesMousePosition = biggestMousePosition;
-					);
 
 					smallesMousePosition <= itemStart || biggestMousePosition >= itemEnd ? (
 						SetMediaItemInfo_Value(item, "B_UISEL", 1);
 					);
 				);
 			);
-			DeleteExtState(lasso_tool, stringTrack, 1);
+			DeleteExtState(sectioncode, stringTrack, 1);
 		);
 
 		i += 1;
