@@ -243,6 +243,11 @@ function end_tasks() local(extStateKey, extStateKeyString, mousePosExtState, tra
 
 	msg_s(tracksGoneOver);
 	msg_d(tracksSelected);
+	loop(tracksSelected,
+		// For each track
+
+		
+	);
 );
 
 
