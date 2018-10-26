@@ -1,33 +1,19 @@
-// ----- DEBUGGING ====>
-@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
 
-debug = 1; // 0 => No console. 1 => Display console messages for debugging.
-clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
-
-msg_clean();
-// <==== DEBUGGING -----
-
-
-/* Template and Script developed by Night */
+/* Script developed by Night */
 
 /*
 
 How it works:
-1.  Create a sectioncode which should be completely unique.
-	If not then it's probably not too much trouble unless another script uses the same Section Code AND a key with name "time".
-	Otherwise just change every ExtState modification to what you want.
-2.  Set a callstack rate, this is the delay(ms) after a key press until the script ends.
-	By default this is set to 500 which appears to be the time taken for fast key input to sink in after initial press.
-3.  Change the init_press() function for what to happen on the initial script run.
-4.  Change what to run in the background with background_tasks().
-5.  Change what to run after the key is released inside end_tasks().
-
-The script's initial start time is stored within script_time, string format in str_script_time.
+1.  On initial run and hold down, select "New Instance" in the popup and "Remember decision".
+2.  Paint a loop around/ontop of the items you wish to select while holding down the button.
 
 Feel free to message me with feedback, bugs and anything you do with it on Discord! @Night#5537
 
 */
 
+
+
+// Unless you are a scripter, avoid modifying these
 sectioncode = "lasso_tool";
 callstack_rate = 500;
 callstack_rate_after_init = 20;
@@ -84,7 +70,8 @@ function getStringFromInt(int) (
 
 
 
-function saveTrackAndMousePosition() local(tr) (
+function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_track_number, i, just_track_number, string_mouse_pos)
+(
 	extension_api("BR_GetMouseCursorContext", #window, #segment, #details, 50);
 
 	mouse_pos = extension_api("BR_GetMouseCursorContext_Position");
@@ -94,6 +81,7 @@ function saveTrackAndMousePosition() local(tr) (
   		tr ? (
   			track_number = GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER");
   			string_track_number = sprintf(#, "%f", track_number);
+  			just_track_number = "";
   			i = 0;
   			loop(strlen(string_track_number),
   				strcmp(getCharByPosition(i, string_track_number), ".") == 0 ? (
@@ -102,20 +90,14 @@ function saveTrackAndMousePosition() local(tr) (
   				i+=1;
   			);
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
-  			msg_s(just_track_number);
-  			HasExtState(lasso_tool, just_track_number) ? (
-  				GetExtState(#savedTimesForTrack, lasso_tool, just_track_number);
-  				#savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
-  				#savedTimesForTrack = strcat(#savedTimesForTrack, ",");
-  				msg_s("Track Exists");
-  				msg_s(#savedTimesForTrack);
-  				SetExtState(lasso_tool, just_track_number, #savedTimesForTrack, 0);
+  			HasExtState(sectioncode, just_track_number) ? (
+  				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
+  				savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
+  				savedTimesForTrack = strcat(#savedTimesForTrack, ",");
+  				SetExtState(sectioncode, just_track_number, savedTimesForTrack, 0);
   			):(
   				string_mouse_pos = strcat(string_mouse_pos, ",");
-  				msg_s("Track doesn't exist");
-  				msg_s(string_mouse_pos);
-  				msg_s(just_track_number);
-  				SetExtState(lasso_tool, just_track_number, string_mouse_pos, 0);
+  				SetExtState(sectioncode, just_track_number, string_mouse_pos, 0);
   			);
   		);
 	);
@@ -126,28 +108,29 @@ function saveTrackAndMousePosition() local(tr) (
 
 
 function init_press() (
-
+	Main_OnCommand(40289, 0);
 	saveTrackAndMousePosition();
 
-	SetExtState("lasso_tool_press_status", "init", "pressed", 0);
+	SetExtState(sectioncode, "init", "pressed", 0);
 );
 
 function background_tasks() (
-	HasExtState("lasso_tool_press_status", "init") ? (
+	HasExtState(sectioncode, "init") ? (
 		callstack_rate = callstack_rate_after_init;
-		DeleteExtState("lasso_tool_press_status", "init", 1);
+		DeleteExtState(sectioncode, "init", 1);
 	);
 	saveTrackAndMousePosition();
 );
 
-function end_tasks() local(tr) (
+function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, countCommas, biggestMousePosition, smallesMousePosition, previousCommaPosition, mousePosInArray, floatArrayTerm, tr, k, item, itemStart, itemEnd)
+(
 	trackCount = CountTracks(0);
 
-	i = 0;
+	i = 1;
 	loop(trackCount,
-		HasExtState(lasso_tool, stringTrack = getStringFromInt(i)) ? (
-			msg_s("Selected track loop");
-			GetExtState(#allTrackMousePositions, lasso_tool, stringTrack);
+		stringTrack = getStringFromInt(i);
+		HasExtState(sectioncode, stringTrack) ? (
+			GetExtState(#allTrackMousePositions, sectioncode, stringTrack);
 			j = 0;
 			latestCommaPosition = 0;
 			countCommas = 0;
@@ -167,41 +150,48 @@ function end_tasks() local(tr) (
 						mousePosInArray = substring(0, latestCommaPosition, #allTrackMousePositions);
 					);
 
-					biggestMousePosition = max(biggestMousePosition, get_float_from_string(mousePosInArray));
-					smallesMousePosition = min(smallesMousePosition, get_float_from_string(mousePosInArray));
+					floatArrayTerm = get_float_from_string(mousePosInArray);
 
+					biggestMousePosition = max(biggestMousePosition, floatArrayTerm);
+					smallesMousePosition == 0 ? (
+						smallesMousePosition = floatArrayTerm;
+					):(
+						smallesMousePosition = min(smallesMousePosition, floatArrayTerm);
+					);
+					
 					countCommas += 1;
 				);
 				j += 1;
 			);
 
-			//DeleteExtState(lasso_tool, stringTrack, 1);
-
-			tr = GetTrack(0, i);
+			tr = GetTrack(0, i-1);
 			CountTrackMediaItems(tr) > 0 ? (
+
 				k = 0;
 				loop(CountTrackMediaItems(tr),
-					msg_d(k);
 					item = GetTrackMediaItem(tr, k);
 					itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 					itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-					biggestMousePosition == 0 ? (
-						biggestMousePosition = smallesMousePosition;
-					);
-					smallesMousePosition == 0 ? (
-						smallesMousePosition = biggestMousePosition;
+
+					smallesMousePosition <= itemStart && biggestMousePosition >= itemEnd ? (
+						SetMediaItemInfo_Value(item, "B_UISEL", 1);
+					):(
+						smallesMousePosition <= itemEnd && smallesMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
+
+						biggestMousePosition <= itemEnd && biggestMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
 					);
 
-					smallesMousePosition <= itemStart || biggestMousePosition >= itemEnd ? (
-						SetMediaItemInfo_Value(item, "B_UISEL", 1);
-					);
 				);
 			);
+			DeleteExtState(sectioncode, stringTrack, 1);
 		);
 
 		i += 1;
 	);
-	msg_s("Updated!");
 
 	UpdateArrange();
 );
@@ -210,7 +200,7 @@ function end_tasks() local(tr) (
 
 
 
-
+// All the running in background stuff is here
 
 
 function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
@@ -219,6 +209,9 @@ function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
 		GetExtState(saved_time_after, sectioncode, "time");
 		floatSavedTimeAfter = get_float_from_string(saved_time_after);
 		script_time == floatSavedTimeAfter ? (
+			HasExtState(sectioncode, "init") ? (
+				saveTrackAndMousePosition();
+			);
 			defer("checkCallstack(callstack_rate)");
 		):(
 			background_tasks();
