@@ -2,12 +2,10 @@
 @import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
 
 debug = 1; // 0 => No console. 1 => Display console messages for debugging.
-clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+clean = 1; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
 
 msg_clean();
 // <==== DEBUGGING -----
-
-
 
 /* Script developed by Night */
 
@@ -105,7 +103,7 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
   			!HasExtState(sectioncode, "first_track") ? (
   				SetExtState(sectioncode, "first_track", just_track_number, 0);
   				SetExtState(sectioncode, "first_mouse_pos", string_mouse_pos, 0);
-  				msg_s("Saved the first track and mouse position");
+  				//msg_s("Saved the first track and mouse position");
   			);
 
   			SetExtState(sectioncode, "last_track", just_track_number, 0);
@@ -159,9 +157,6 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 			smallesMousePosition = 0;
 			loop(strlen(#allTrackMousePositions),
 				strcmp(getCharByPosition(j, #allTrackMousePositions), ",") == 0 ? (
-
-
-
 					previousCommaPosition = latestCommaPosition+1;
 					latestCommaPosition = j;
 					countCommas > 0 ? (
@@ -187,7 +182,6 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 
 			tr = GetTrack(0, i-1);
 			CountTrackMediaItems(tr) > 0 ? (
-
 				k = 0;
 				loop(CountTrackMediaItems(tr),
 					item = GetTrackMediaItem(tr, k);
@@ -205,7 +199,7 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 							SetMediaItemInfo_Value(item, "B_UISEL", 1);
 						);
 					);
-
+					k += 1;
 				);
 			);
 			DeleteExtState(sectioncode, stringTrack, 1);
