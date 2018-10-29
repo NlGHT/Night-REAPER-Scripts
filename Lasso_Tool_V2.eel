@@ -1,4 +1,3 @@
-
 /* Script developed by Night */
 
 /*
@@ -138,9 +137,6 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 			smallesMousePosition = 0;
 			loop(strlen(#allTrackMousePositions),
 				strcmp(getCharByPosition(j, #allTrackMousePositions), ",") == 0 ? (
-
-
-
 					previousCommaPosition = latestCommaPosition+1;
 					latestCommaPosition = j;
 					countCommas > 0 ? (
@@ -166,7 +162,6 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 
 			tr = GetTrack(0, i-1);
 			CountTrackMediaItems(tr) > 0 ? (
-
 				k = 0;
 				loop(CountTrackMediaItems(tr),
 					item = GetTrackMediaItem(tr, k);
@@ -184,7 +179,7 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 							SetMediaItemInfo_Value(item, "B_UISEL", 1);
 						);
 					);
-
+					k += 1;
 				);
 			);
 			DeleteExtState(sectioncode, stringTrack, 1);
