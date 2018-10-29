@@ -1,0 +1,10 @@
+i = 0;
+loop(CountSelectedMediaItems(0)-1,
+	i % 2 != 0 ? (
+		item = GetSelectedMediaItem(0,i);
+		tr = GetMediaItem_Track(item);
+		DeleteTrackMediaItem(tr, item);
+	);
+	i += 1;
+);
+UpdateArrange();
