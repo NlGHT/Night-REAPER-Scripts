@@ -1,3 +1,13 @@
+// ----- DEBUGGING ====>
+@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+
+debug = 1; // 0 => No console. 1 => Display console messages for debugging.
+clean = 0; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+
+msg_clean();
+// <==== DEBUGGING -----
+
+
 
 /* Script developed by Night */
 
@@ -89,7 +99,18 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
  				);
   				i+=1;
   			);
+
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
+
+  			!HasExtState(sectioncode, "first_track") ? (
+  				SetExtState(sectioncode, "first_track", just_track_number, 0);
+  				SetExtState(sectioncode, "first_mouse_pos", string_mouse_pos, 0);
+  				msg_s("Saved the first track and mouse position");
+  			);
+
+  			SetExtState(sectioncode, "last_track", just_track_number, 0);
+  			SetExtState(sectioncode, "last_mouse_pos", string_mouse_pos, 0);
+
   			HasExtState(sectioncode, just_track_number) ? (
   				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
   				savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
@@ -188,6 +209,30 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 				);
 			);
 			DeleteExtState(sectioncode, stringTrack, 1);
+
+
+			
+			GetExtState(#firstTrackSaved, sectioncode, "first_track");
+			GetExtState(#firstMousePosition, sectioncode, "first_mouse_pos");
+			GetExtState(#lastTrackSaved, sectioncode, "last_track");
+			GetExtState(#lastMousePosition, sectioncode, "last_mouse_pos");
+
+			get_int_from_string(#firstTrackSaved) > get_int_from_string(#lastMousePosition) ? (
+				lastTrack = get_int_from_string(#firstTrackSaved);
+				lastMousePos = get_float_from_string(#firstMousePosition);
+				firstTrack = get_int_from_string(#lastTrackSaved);
+				firstMousePos = get_float_from_string(#lastMousePosition);
+			):(
+				lastTrack = get_int_from_string(#lastTrackSaved);
+				lastMousePos = get_float_from_string(#lastMousePosition);
+				firstMousePos = get_float_from_string(#firstMousePosition);
+				firstTrack = get_int_from_string(#firstTrackSaved);
+			);
+
+			trackDistance = lastTrack - firstTrack;
+
+			//msg_d(trackDistance);
+			
 		);
 
 		i += 1;
