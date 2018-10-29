@@ -130,7 +130,7 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
 
 
 function init_press() (
-	Main_OnCommand(40289, 0);
+	//Main_OnCommand(40289, 0);
 	saveTrackAndMousePosition();
 
 	SetExtState(sectioncode, "init", "pressed", 0);
@@ -283,7 +283,7 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 	DeleteExtState(sectioncode, "last_track", 1);
 	DeleteExtState(sectioncode, "last_mouse_pos", 1);
 	UpdateArrange();
-	Undo_EndBlock("Laso tool", 0);
+	Undo_EndBlock("Lasso tool add to selection", 0);
 );
 
 
