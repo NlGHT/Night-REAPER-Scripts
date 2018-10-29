@@ -1,11 +1,3 @@
-// ----- DEBUGGING ====>
-@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
-
-debug = 1; // 0 => No console. 1 => Display console messages for debugging.
-clean = 1; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
-
-msg_clean();
-// <==== DEBUGGING -----
 
 /* Script developed by Night */
 
@@ -18,6 +10,10 @@ How it works:
 Feel free to message me with feedback, bugs and anything you do with it on Discord! @Night#5537
 
 */
+
+
+
+
 
 
 
@@ -88,7 +84,9 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
 		tr = extension_api("BR_GetMouseCursorContext_Track");
   		tr ? (
   			track_number = GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER");
-  			string_track_number = sprintf(#, "%f", track_number);
+  			//string_track_number = sprintf(#, "%f", track_number);
+  			just_track_number = sprintf(#, "%d", track_number);
+  			/*
   			just_track_number = "";
   			i = 0;
   			loop(strlen(string_track_number),
@@ -98,9 +96,11 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
  				);
   				i+=1;
   			);
+  			*/
 
   			string_mouse_pos = sprintf(#, "%f", mouse_pos);
 
+  			// Need to save the first and last track data for vertical pass later
   			HasExtState(sectioncode, "first_track") == 0 ? (
   				SetExtState(sectioncode, "first_track", just_track_number, 0);
   				SetExtState(sectioncode, "first_mouse_pos", string_mouse_pos, 0);
@@ -109,6 +109,7 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_t
   			SetExtState(sectioncode, "last_track", just_track_number, 0);
   			SetExtState(sectioncode, "last_mouse_pos", string_mouse_pos, 0);
 
+  			// Save mouse positions for the relative tracks
   			HasExtState(sectioncode, just_track_number) ? (
   				// If mouse positions for the track have already been saved, then append the new mouse data to the end
   				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
