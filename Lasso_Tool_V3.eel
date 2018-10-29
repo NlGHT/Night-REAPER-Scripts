@@ -1,0 +1,332 @@
+// ----- DEBUGGING ====>
+@import ../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+
+debug = 1; // 0 => No console. 1 => Display console messages for debugging.
+clean = 1; // 0 => No console cleaning before every script execution. 1 => Console cleaning before every script execution.
+
+msg_clean();
+// <==== DEBUGGING -----
+
+/* Script developed by Night */
+
+/*
+
+How it works:
+1.  On initial run and hold down, select "New Instance" in the popup and "Remember decision".
+2.  Paint a loop around/ontop of the items you wish to select while holding down the button.
+
+Feel free to message me with feedback, bugs and anything you do with it on Discord! @Night#5537
+
+*/
+
+
+
+// Unless you are a scripter, avoid modifying these
+sectioncode = "lasso_tool";
+callstack_rate = 500;
+callstack_rate_after_init = 20;
+
+
+
+
+
+function getCharByPosition(posInString, inputString) local(posInString, inputString) (
+	str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), 1, strlen(inputString));
+);
+
+function substringByLength(posInString, smolStringlength, inputString) local(posInString, smolStringlength, inputString, outputString) (
+	strlen(outputString = str_delsub(str_delsub(strcpy(#, inputString), 0, posInString), smolStringlength, strlen(inputString)-posInString)) < smolStringlength ? str_delsub(strcpy(#, inputString), 0, strlen(inputString)-smolStringlength) : outputString;
+);
+
+function substring(indexStart, indexEnd, inputString) local(indexStart, indexEnd, inputString, outputString, indexDistance) (
+	strlen(outputString = str_delsub(str_delsub(strcpy(#, inputString), 0, indexStart), indexDistance = (min(indexEnd, strlen(inputString))-indexStart), strlen(inputString))) < indexDistance ? str_delsub(strcpy(#, inputString), 0, strlen(inputString)-(min(indexEnd, strlen(inputString)))) : outputString;
+);
+
+// Thankyou to Banned (https://forums.cockos.com/member.php?u=8512) on forums for getting float from string function https://forums.cockos.com/showthread.php?t=140211
+function get_float_from_string(str)
+(
+    matchi("*?-*?%{float_value}f*?", str) ? ( // first, try to match for a negative value, i.e. a (series of) numeric character(s), *directly* preceded with '-' character)
+        -float_value; // apply negative sign, return float value
+    ) : ( // else, just try to match a (positive) value, i.e. a (series of) numeric character(s)
+        matchi("*?%{float_value}f*?", str) ? 
+        (
+            float_value; // return float value
+        );
+    );
+);
+
+function get_int_from_string(str)
+(
+    matchi("*?-*?%{float_value}d*?", str) ? ( // first, try to match for a negative value, i.e. a (series of) numeric character(s), *directly* preceded with '-' character)
+        -float_value; // apply negative sign, return float value
+    ) : ( // else, just try to match a (positive) value, i.e. a (series of) numeric character(s)
+        matchi("*?%{float_value}d*?", str) ? 
+        (
+            float_value; // return float value
+        );
+    );
+);
+
+function getStringFromFloat(float) (
+	sprintf(#, "%f", float);
+);
+
+function getStringFromInt(int) (
+	sprintf(#, "%d", int);
+);
+
+
+
+
+function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, string_track_number, i, just_track_number, string_mouse_pos)
+(
+	extension_api("BR_GetMouseCursorContext", #window, #segment, #details, 50);
+
+	mouse_pos = extension_api("BR_GetMouseCursorContext_Position");
+
+	mouse_pos >= 0 ? ( // Mouse in in arrange view
+		tr = extension_api("BR_GetMouseCursorContext_Track");
+  		tr ? (
+  			track_number = GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER");
+  			string_track_number = sprintf(#, "%f", track_number);
+  			just_track_number = "";
+  			i = 0;
+  			loop(strlen(string_track_number),
+  				strcmp(getCharByPosition(i, string_track_number), ".") == 0 ? (
+  					// Getting the 
+  					just_track_number = substring(0, i, string_track_number);
+ 				);
+  				i+=1;
+  			);
+
+  			string_mouse_pos = sprintf(#, "%f", mouse_pos);
+
+  			HasExtState(sectioncode, "first_track") == 0 ? (
+  				SetExtState(sectioncode, "first_track", just_track_number, 0);
+  				SetExtState(sectioncode, "first_mouse_pos", string_mouse_pos, 0);
+  			);
+
+  			SetExtState(sectioncode, "last_track", just_track_number, 0);
+  			SetExtState(sectioncode, "last_mouse_pos", string_mouse_pos, 0);
+
+  			HasExtState(sectioncode, just_track_number) ? (
+  				// If mouse positions for the track have already been saved, then append the new mouse data to the end
+  				GetExtState(#savedTimesForTrack, sectioncode, just_track_number);
+  				savedTimesForTrack = strcat(#savedTimesForTrack, string_mouse_pos);
+  				savedTimesForTrack = strcat(#savedTimesForTrack, ",");
+  				SetExtState(sectioncode, just_track_number, savedTimesForTrack, 0);
+  			):(
+  				// If there is no data stored already for the given track then save initial mouse position data
+  				string_mouse_pos = strcat(string_mouse_pos, ",");
+  				SetExtState(sectioncode, just_track_number, string_mouse_pos, 0);
+  			);
+  		);
+	);
+);
+
+
+
+
+
+function init_press() (
+	Main_OnCommand(40289, 0);
+	saveTrackAndMousePosition();
+
+	SetExtState(sectioncode, "init", "pressed", 0);
+);
+
+function background_tasks() (
+	HasExtState(sectioncode, "init") ? (
+		callstack_rate = callstack_rate_after_init;
+		DeleteExtState(sectioncode, "init", 1);
+	);
+	saveTrackAndMousePosition();
+);
+
+function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, countCommas, biggestMousePosition, smallesMousePosition, previousCommaPosition, mousePosInArray, floatArrayTerm, tr, k, item, itemStart, itemEnd)
+(
+	trackCount = CountTracks(0);
+
+	i = 1;
+	loop(trackCount,
+		stringTrack = getStringFromInt(i);
+		HasExtState(sectioncode, stringTrack) ? (
+
+			/*
+
+			BEGIN HORIZONTAL PASS (Getting highest and lowest mouse position on track, mapping the bounds on the x-axis)
+
+			*/
+
+			GetExtState(#allTrackMousePositions, sectioncode, stringTrack);
+			j = 0;
+			latestCommaPosition = 0;
+			countCommas = 0;
+			biggestMousePosition = 0;
+			smallesMousePosition = 0;
+			loop(strlen(#allTrackMousePositions),
+				strcmp(getCharByPosition(j, #allTrackMousePositions), ",") == 0 ? (
+					previousCommaPosition = latestCommaPosition+1;
+					latestCommaPosition = j;
+					countCommas > 0 ? (
+						// For some reason the substring function was messing up the first seperation
+						mousePosInArray = substring(previousCommaPosition, latestCommaPosition, #allTrackMousePositions);
+					):(
+						mousePosInArray = substring(0, latestCommaPosition, #allTrackMousePositions);
+					);
+
+					floatArrayTerm = get_float_from_string(mousePosInArray);
+
+					biggestMousePosition = max(biggestMousePosition, floatArrayTerm);
+					smallesMousePosition == 0 ? (
+						smallesMousePosition = floatArrayTerm;
+					):(
+						smallesMousePosition = min(smallesMousePosition, floatArrayTerm);
+					);
+					
+					countCommas += 1;
+				);
+				j += 1;
+			);
+
+
+			/*
+
+			BEGIN VERTICAL PASS (Mapping bounds on y-axis)
+
+			*/
+
+			// Get the first and last tracks and mouse positions
+			GetExtState(#firstTrackSaved, sectioncode, "first_track");
+			GetExtState(#firstMousePosition, sectioncode, "first_mouse_pos");
+			GetExtState(#lastTrackSaved, sectioncode, "last_track");
+			GetExtState(#lastMousePosition, sectioncode, "last_mouse_pos");
+
+			// Convert string extstates to usable variables
+			lastTrack = get_int_from_string(#lastTrackSaved);
+			lastMousePos = get_float_from_string(#lastMousePosition);
+			firstMousePos = get_float_from_string(#firstMousePosition);
+			firstTrack = get_int_from_string(#firstTrackSaved);
+
+			// Calculate distance between each track
+			trackDistance = abs(lastTrack - firstTrack);
+			perTrackDistance = abs(lastMousePos-firstMousePos)/trackDistance;
+
+			firstTrack > lastTrack ? (
+				// i is current loop track
+				i == firstTrack ? (
+					distanceToEnd = 1;
+				):(
+					distanceToEnd = firstTrack - i;
+				);
+
+				firstMousePos > lastMousePos ? (
+					smallesMousePosition = min(smallesMousePosition, firstMousePos-(distanceToEnd*perTrackDistance));
+					biggestMousePosition = max(biggestMousePosition, firstMousePos-(distanceToEnd*perTrackDistance));
+				):(
+					smallesMousePosition = min(smallesMousePosition, firstMousePos+(distanceToEnd*perTrackDistance));
+					biggestMousePosition = max(biggestMousePosition, firstMousePos+(distanceToEnd*perTrackDistance));
+				);
+			):(
+				// i is current loop track
+				i == firstTrack ? (
+					distanceToTop = 1;
+				):(
+					distanceToTop = i - firstTrack;
+				);
+				
+				firstMousePos > lastMousePos ? (
+					smallesMousePosition = min(smallesMousePosition, firstMousePos-(distanceToTop*perTrackDistance));
+					biggestMousePosition = max(biggestMousePosition, firstMousePos-(distanceToTop*perTrackDistance));
+				):(
+					///////////////////////////
+					smallesMousePosition = min(smallesMousePosition, firstMousePos+(distanceToTop*perTrackDistance));
+					biggestMousePosition = max(biggestMousePosition, firstMousePos+(distanceToTop*perTrackDistance));
+				);
+			);
+
+
+			// Select the items within the given track bounds
+
+			tr = GetTrack(0, i-1);
+			CountTrackMediaItems(tr) > 0 ? (
+				k = 0;
+				loop(CountTrackMediaItems(tr),
+					item = GetTrackMediaItem(tr, k);
+					itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+					itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+
+					smallesMousePosition <= itemStart && biggestMousePosition >= itemEnd ? (
+						SetMediaItemInfo_Value(item, "B_UISEL", 1);
+					):(
+						smallesMousePosition <= itemEnd && smallesMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
+
+						biggestMousePosition <= itemEnd && biggestMousePosition >= itemStart ? (
+							SetMediaItemInfo_Value(item, "B_UISEL", 1);
+						);
+					);
+					k += 1;
+				);
+			);
+			DeleteExtState(sectioncode, stringTrack, 1);
+		);
+
+		i += 1;
+	);
+	DeleteExtState(sectioncode, "first_track", 1);
+	DeleteExtState(sectioncode, "first_mouse_pos", 1);
+	DeleteExtState(sectioncode, "last_track", 1);
+	DeleteExtState(sectioncode, "last_mouse_pos", 1);
+	UpdateArrange();
+);
+
+
+
+
+
+// All the running in background stuff is here
+
+
+function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
+	ms /= 1000;
+	time_precise() - script_time < ms ? (
+		GetExtState(saved_time_after, sectioncode, "time");
+		floatSavedTimeAfter = get_float_from_string(saved_time_after);
+		script_time == floatSavedTimeAfter ? (
+			HasExtState(sectioncode, "init") ? (
+				saveTrackAndMousePosition();
+			);
+			defer("checkCallstack(callstack_rate)");
+		):(
+			background_tasks();
+		);
+	):(
+		GetExtState(saved_time_after, sectioncode, "time");
+		floatSavedTimeAfter = get_float_from_string(saved_time_after);
+		script_time == floatSavedTimeAfter ? (
+			DeleteExtState(sectioncode, "time", 1);
+			end_tasks();
+		):(
+			background_tasks();
+		);
+	);
+);
+
+
+time_precise(script_time);
+
+sprintf(str_script_time, "%f", script_time);
+
+
+// Check ExtStates
+
+HasExtState(sectioncode, "time") ? (
+	SetExtState(sectioncode, "time", str_script_time, 0);
+	defer("checkCallstack(callstack_rate)");
+):(
+	SetExtState(sectioncode, "time", str_script_time, 0);
+	init_press();
+	defer("checkCallstack(callstack_rate)");
+);
