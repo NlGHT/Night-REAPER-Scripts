@@ -144,7 +144,8 @@ function background_tasks() (
 	saveTrackAndMousePosition();
 );
 
-function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, countCommas, biggestMousePosition, smallesMousePosition, previousCommaPosition, mousePosInArray, floatArrayTerm, tr, k, item, itemStart, itemEnd)
+function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, countCommas, biggestMousePosition, smallesMousePosition, previousCommaPosition, 
+	mousePosInArray, floatArrayTerm, tr, k, item, itemStart, itemEnd, lastTrack, lastMousePos, firstMousePos, firstTrack, trackDistance, perTrackDistance, distanceToTop, distanceToEnd)
 (
 	trackCount = CountTracks(0);
 
