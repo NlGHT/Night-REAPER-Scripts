@@ -122,8 +122,8 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, i, just_
   				//ShowConsoleMsg("\n");
   				distanceBetween = abs(previousTrackInt - track_number) > 1 ? (
   					// If the last saved track was not next to this one
-  					ShowConsoleMsg(track_number);
-  					ShowConsoleMsg("\n");
+  					//ShowConsoleMsg(track_number);
+  					//ShowConsoleMsg("\n");
 
 					GetExtState(#previousMousePosition, sectioncode, "previous_mouse_position");
 					previousMousePositionImported = #previousMousePosition;
