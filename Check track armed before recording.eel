@@ -9,6 +9,8 @@ loop(trackCount,
 	rec == 1 ? (
 		track_armed = 1;
 	);
+
+	i += 1;
 );
 
 	
