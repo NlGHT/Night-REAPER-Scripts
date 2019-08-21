@@ -8,6 +8,10 @@ How it works:
 	Otherwise just change every ExtState modification to what you want.
 2.  Set a callstack rate, this is the delay(ms) after a key press until the script ends.
 	By default this is set to 500 which appears to be the time taken for fast key input to sink in after initial press.
+3.  Set a callstack rate for after the initial time.
+	When holding down a key there will be ~500ms where after the first press, none will be detected.
+	After this period, the key will send fast key inputs.
+	This is where the second callstack rate comes in.
 3.  Change the init_press() function for what to happen on the initial script run.
 4.  Change what to run in the background with background_tasks().
 5.  Change what to run after the key is released inside end_tasks().
@@ -20,7 +24,7 @@ Feel free to message me with feedback, bugs and anything you do with it on Disco
 
 sectioncode = "12345";
 callstack_rate = 500;
-
+callstack_rate_after_init = 40;
 
 
 
@@ -72,15 +76,30 @@ function getStringFromFloat(float) (
 	sprintf(#, "%f", float);
 );
 
+function getStringFromInt(int) (
+	sprintf(#, "%d", int);
+);
 
-function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
+
+function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms, savedCallstackRate) (
 	ms /= 1000;
 	time_precise() - script_time < ms ? (
 		GetExtState(saved_time_after, sectioncode, "time");
 		floatSavedTimeAfter = get_float_from_string(saved_time_after);
 		script_time == floatSavedTimeAfter ? (
-			defer("checkCallstack(callstack_rate)");
+			HasExtState(sectioncode, "init") ? (
+				background_tasks();
+			);
+			GetExtState(savedCallstackRate, sectioncode, "callstackRate");
+			floatSavedCallstackRate = get_int_from_string(savedCallstackRate);
+			defer("checkCallstack(floatSavedCallstackRate)");
 		):(
+			// This will be activated probably at the 2nd key fire
+			HasExtState(sectioncode, "init") ? (
+				callstack_rate = callstack_rate_after_init;
+				SetExtState(sectioncode, "callstackRate", getStringFromInt(callstack_rate), 0);
+				DeleteExtState(sectioncode, "init", 1);
+			);
 			background_tasks();
 		);
 	):(
@@ -88,13 +107,19 @@ function checkCallstack(ms) local(saved_time_after, floatSavedTimeAfter, ms) (
 		floatSavedTimeAfter = get_float_from_string(saved_time_after);
 		script_time == floatSavedTimeAfter ? (
 			DeleteExtState(sectioncode, "time", 1);
+			DeleteExtState(sectioncode, "init", 1);
+			DeleteExtState(sectioncode, "callstackRate", 1);
 			end_tasks();
 		):(
+			HasExtState(sectioncode, "init") ? (
+				callstack_rate = callstack_rate_after_init;
+				SetExtState(sectioncode, "callstackRate", getStringFromInt(callstack_rate), 0);
+				DeleteExtState(sectioncode, "init", 1);
+			);
 			background_tasks();
 		);
 	);
 );
-
 
 time_precise(script_time);
 
@@ -105,9 +130,13 @@ sprintf(str_script_time, "%f", script_time);
 
 HasExtState(sectioncode, "time") ? (
 	SetExtState(sectioncode, "time", str_script_time, 0);
-	defer("checkCallstack(callstack_rate)");
+	GetExtState(savedCallstackRate, sectioncode, "callstackRate");
+	floatSavedCallstackRate = get_int_from_string(savedCallstackRate);
+	defer("checkCallstack(floatSavedCallstackRate)");
 ):(
 	SetExtState(sectioncode, "time", str_script_time, 0);
+	SetExtState(sectioncode, "init", "pressed", 0);
+	SetExtState(sectioncode, "callstackRate", getStringFromInt(callstack_rate), 0);
 	init_press();
 	defer("checkCallstack(callstack_rate)");
 );
