@@ -163,7 +163,7 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, i, just_
 
 
 function init_press() (
-	Main_OnCommand(40289, 0);
+	Main_OnCommand(40289, 0); // Item: Unselect all items
 	saveTrackAndMousePosition();
 
 	SetExtState(sectioncode, "init", "pressed", 0);
