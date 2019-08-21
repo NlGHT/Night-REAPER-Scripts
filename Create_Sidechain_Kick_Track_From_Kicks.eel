@@ -1,9 +1,0 @@
-Main_OnCommand(41110, 0); // Select track under mouse cursor
-trackUnderCursorNumber = GetSelectedTrack(0, 0);
-originalTrackID = GetMediaTrackInfo_Value(trackUnderCursorNumber, "IP_TRACKNUMBER");
-Main_OnCommand(40062, 0); // Duplicate track under cursor
-// Selection gets switched to new track
-parentedTrack = GetTrack(0, originalTrackID);
-GetSetMediaTrackInfo_String(parentedTrack, "P_NAME", "Kick", 0);
-UpdateArrange();
-InsertTrackAtIndex(GetMediaTrackInfo_Value(parentedTrack, "IP_TRACKNUMBER"), 1);
