@@ -1,4 +1,4 @@
-script_title = "Add Bar Empty Space At Start"
+script_title = "Add bar of empty space at start of arrangement"
   
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
