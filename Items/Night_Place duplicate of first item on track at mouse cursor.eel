@@ -21,4 +21,4 @@ MoveEditCursor(savedCursorPosition - newCursorPosition, 0);
 GetSet_ArrangeView2(0, 1, screen_x_start, screen_x_end, start_time, end_time);
 
 PreventUIRefresh(-1);
-Undo_EndBlock("Place duplicate of fist item on track at mouse cursor", 0);
+Undo_EndBlock("Place duplicate of first item on track at mouse cursor", 0);
