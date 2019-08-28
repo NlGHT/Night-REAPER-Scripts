@@ -1,0 +1,24 @@
+Undo_BeginBlock();
+PreventUIRefresh(1);
+
+Main_OnCommand(41110, 0); // Select track under mouse cursor
+track = GetSelectedTrack(0, 0);
+sampleItem = GetTrackMediaItem(track, 0);
+GetSet_ArrangeView2(0, 0, screen_x_start, screen_x_end, start_time, end_time);
+
+savedCursorPosition = GetCursorPosition();
+
+Main_OnCommand(40513, 0); // Move edit cursor to mouse
+newCursorPosition = GetCursorPosition();
+item_chunk = '';
+GetItemStateChunk(sampleItem, item_chunk);
+new_item = AddMediaItemToTrack(track);
+SetItemStateChunk(new_item, item_chunk);
+SetMediaItemInfo_Value(new_item, "D_POSITION", newCursorPosition);
+SetMediaItemInfo_Value(new_item, "B_MUTE", 0);
+
+MoveEditCursor(savedCursorPosition - newCursorPosition, 0);
+GetSet_ArrangeView2(0, 1, screen_x_start, screen_x_end, start_time, end_time);
+
+PreventUIRefresh(-1);
+Undo_EndBlock("Place duplicate of fist item on track at mouse cursor", 0);

@@ -1,0 +1,45 @@
+Undo_BeginBlock();
+PreventUIRefresh(1);
+
+Main_OnCommand(41110, 0);
+kickTrack = GetSelectedTrack(0, 0);
+#originalTrackName = '';
+GetSetMediaTrackInfo_String(kickTrack, "P_NAME", #originalTrackName, 0);
+
+GKTID = -1;
+i = 0;
+loop(CountTracks(0),
+	trackInLoop = GetTrack(0, i);
+	#theTrackName = '';
+	GetSetMediaTrackInfo_String(trackInLoop, "P_NAME", #theTrackName, 0 );
+	strcmp("Ghost Kick Sample", #theTrackName) == 0 ? (
+		GKTID = i;
+	);
+	i += 1;
+);
+
+GKTID > -1 ? (
+	ghostKickTrack = GetTrack(0, GKTID);
+
+	while(CountTrackMediaItems(ghostKickTrack) > 0) (
+		it = GetTrackMediaItem(ghostKickTrack, 0);
+		DeleteTrackMediaItem(ghostKickTrack, it);
+	);
+
+	i = 0;
+	loop(CountTrackMediaItems(kickTrack),
+		item = GetTrackMediaItem(kickTrack, i);
+		item_chunk = '';
+		GetItemStateChunk(item, item_chunk);
+		new_item = AddMediaItemToTrack(ghostKickTrack);
+	    SetItemStateChunk(new_item, item_chunk);
+	    SetMediaItemInfo_Value(new_item, "D_POSITION", GetMediaItemInfo_Value(item, "D_POSITION"));
+		SetMediaItemInfo_Value(new_item,"D_LENGTH",0.1*GetMediaItemInfo_Value(item,"D_LENGTH"));
+		i += 1;
+	);
+):(
+	ShowMessageBox("No track with name: 'Ghost Kick Sample'", "Updating ghost kicks failed", 0);
+);
+
+PreventUIRefresh(-1);
+Undo_EndBlock("Update ghost kicks", 0);
