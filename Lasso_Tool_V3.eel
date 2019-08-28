@@ -5,13 +5,12 @@
 
 How it works:
 1.  On initial run and hold down, select "New Instance" in the popup and "Remember decision".
-2.  Paint a loop around/ontop of the items you wish to select while holding down the button.
+2.  Paint a loop around/ontop of the items you wish to select while holding down the bound button.
 
 Feel free to message me with feedback, bugs and anything you do with it on Discord! @Night#5537
+Also feel free to conribute to the git with optimisations/changes!
 
 */
-
-
 
 
 
@@ -101,36 +100,28 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, i, just_
 		tr = extension_api("BR_GetMouseCursorContext_Track");
   		tr ? (
   			track_number = GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER");
-  			just_track_number = sprintf(#, "%d", track_number);
+  			just_track_number = sprintf(#, "%d", track_number); // Convert to int
 
-  			string_mouse_pos = sprintf(#, "%f", mouse_pos);
+  			string_mouse_pos = sprintf(#, "%f", mouse_pos); // No point in handling this unless mouse is in arrange view
 
   			// Need to save the first and last track data for vertical pass later
   			HasExtState(sectioncode, "first_track") == 0 ? (
   				SetExtState(sectioncode, "first_track", just_track_number, 0);
   				SetExtState(sectioncode, "first_mouse_pos", string_mouse_pos, 0);
   			):(
-  				//ShowConsoleMsg("Not first press");
-  				//ShowConsoleMsg("\n");
   				GetExtState(#previousTrack, sectioncode, "previous_track");
-  				previousTrackImported = #previousTrack;
-  				//ShowConsoleMsg(previousTrackImported);
-  				//ShowConsoleMsg("\n");
-
+  				previousTrackImported = #previousTrack; // Not sure why sometimes bugs are caused when handling # strings without importing to other variable
   				previousTrackInt = get_int_from_string(previousTrackImported);
-  				//ShowConsoleMsg(track_number);
-  				//ShowConsoleMsg("\n");
-  				distanceBetween = abs(previousTrackInt - track_number) > 1 ? (
-  					// If the last saved track was not next to this one
-  					//ShowConsoleMsg(track_number);
-  					//ShowConsoleMsg("\n");
+  				// Previous track is saved at the bottom of the loop
 
+  				(distanceBetween = abs(previousTrackInt - track_number)) > 1 ? (
+  					// If the last saved track was not next to this one (if the distance between is greater than 1)
+  					// Fill in the blanks
 					GetExtState(#previousMousePosition, sectioncode, "previous_mouse_position");
 					previousMousePositionImported = #previousMousePosition;
   					previousMousePositionFloat = get_float_from_string(previousMousePositionImported);
 
   					intervalMouseIncrementPerTrack = (previousMousePositionFloat - mouse_pos) / distanceBetween;
-
 
   					previousTrackInt < track_number ? (
   						trackBetweenIncrement = 1;
@@ -152,23 +143,15 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, i, just_
   						);
   					);
   				);
-  				/*
-  				multiIter = 0
-  				last
-  				while (multiIter < track_number) (
-  					HasExtState(sectioncode, getStringFromInt(multiIter)) ? (
-
-  					)
-  				)
-  				*/
-
   			);
 
+  			// Save the last track details every frame because that way it will always be last
   			SetExtState(sectioncode, "last_track", just_track_number, 0);
   			SetExtState(sectioncode, "last_mouse_pos", string_mouse_pos, 0);
 
   			saveMousePositionsWithCommaSeparation(just_track_number, string_mouse_pos);
 
+  			// Save previous track details in preparation for next loop usage
   			SetExtState(sectioncode, "previous_track", just_track_number, 0);
   			SetExtState(sectioncode, "previous_mouse_position", string_mouse_pos, 0);
   		);
@@ -180,7 +163,7 @@ function saveTrackAndMousePosition() local(tr, mouse_pos, track_number, i, just_
 
 
 function init_press() (
-	Main_OnCommand(40289, 0);
+	Main_OnCommand(40289, 0); // Item: Unselect all items
 	saveTrackAndMousePosition();
 
 	SetExtState(sectioncode, "init", "pressed", 0);
@@ -292,7 +275,6 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 					smallesMousePosition = min(smallesMousePosition, firstMousePos-(distanceToTop*perTrackDistance));
 					biggestMousePosition = max(biggestMousePosition, firstMousePos-(distanceToTop*perTrackDistance));
 				):(
-					///////////////////////////
 					smallesMousePosition = min(smallesMousePosition, firstMousePos+(distanceToTop*perTrackDistance));
 					biggestMousePosition = max(biggestMousePosition, firstMousePos+(distanceToTop*perTrackDistance));
 				);
@@ -328,6 +310,8 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 
 		i += 1;
 	);
+
+	// Take out the trash
 	DeleteExtState(sectioncode, "first_track", 1);
 	DeleteExtState(sectioncode, "first_mouse_pos", 1);
 	DeleteExtState(sectioncode, "last_track", 1);

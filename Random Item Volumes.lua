@@ -11,8 +11,6 @@ end
   MinValue, MaxValue = retvals_csv:match("([^,]+),([^,]+)")
   MinValue = tonumber(MinValue)
   MaxValue = tonumber(MaxValue)
-  --if MinValue <= MaxValue then break end
-  --reaper.ShowMessageBox("The Minimum is larger than the Maximum value!".. "\n".. "Please select a lower Minimum value than the Maximum", "Error", 0)
 --end
 
 
@@ -31,14 +29,13 @@ if MaxValue == nil then
   goto DialogBox
 end
 
-
-
 -- Catch 'em if they write the things the wrong way around
 if MinValue > MaxValue then
   tempMin = MinValue
   MinValue = MaxValue
   MaxValue = tempMin
 end
+
 reaper.Undo_BeginBlock()
 -- INITIALIZE loop through selected items
 for i = 0, selected_items_count-1  do
@@ -53,7 +50,6 @@ for i = 0, selected_items_count-1  do
 end -- ENDLOOP through selected items
 reaper.Undo_EndBlock("Randomise selected item volumes", -1)
 reaper.UpdateArrange()
---reaper.ShowMessageBox("The minvalue is: ".. MinValue.. " and the max is: ".. MaxValue, "Error", 0)
 
 
 --[[--[=====[

@@ -1,3 +1,5 @@
+Undo_BeginBlock2(0);
+
 trackCount = CountTracks(0);
 
 track_armed = 0;
@@ -7,11 +9,12 @@ loop(trackCount,
 	tr = GetTrack(0, i);
 	rec = GetMediaTrackInfo_Value(tr, "I_RECARM");
 	rec == 1 ? (
-		track_armed = 1;
+		track_armed += 1;
 	);
+
+	i += 1;
 );
 
-	
 track_armed == 0 ? (
 	CountSelectedTracks(0) == 0 ? (
 		lastTouchedTrack = GetLastTouchedTrack();
@@ -20,6 +23,30 @@ track_armed == 0 ? (
 		selectedTrack = GetSelectedTrack(0, 0);
 		SetMediaTrackInfo_Value(selectedTrack, "I_RECARM", 1);
 	);
+
+	Main_OnCommand(1013, 0); // Record
+):(
+	track_armed > 1 ? (
+		retmsg = ShowMessageBox("Do you want to proceed recording with more than one track armed?  No will record with last touched track.", "Record Arm Check", 3);
+		
+		retmsg == 6 ? (
+			// Yes is pressed
+			Main_OnCommand(1013, 0);
+		);
+		retmsg == 7 ? (
+			// No is pressed
+			inc = 0;
+			while(tr = GetTrack(0, inc)) (
+				SetMediaTrackInfo_Value(tr, "I_RECARM", 0);
+				inc += 1;
+			);
+			lastTouchedTrack = GetLastTouchedTrack();
+			SetMediaTrackInfo_Value(lastTouchedTrack, "I_RECARM", 1);
+			Main_OnCommand(1013, 0);
+		);
+	):(
+		Main_OnCommand(1013, 0);
+	);
 );
 
-Main_OnCommand(1013, 0);
+Undo_EndBlock2(0, "Record with check", 0);
