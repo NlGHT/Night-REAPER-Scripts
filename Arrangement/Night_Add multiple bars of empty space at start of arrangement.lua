@@ -1,4 +1,4 @@
-script_title = "Add Multiple Bars Empty Space At Start"
+script_title = "Add multiple bars of empty space at start of arrangement"
 
 reaper.PreventUIRefresh(1)
 
