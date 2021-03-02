@@ -1,0 +1,16 @@
+editor = MIDIEditor_GetActive();
+take   = MIDIEditor_GetTake(editor);
+           extension_api("BR_GetMouseCursorContext");
+mousePos = extension_api("BR_GetMouseCursorContext_Position");
+mousePPQ = MIDI_GetPPQPosFromProjTime(take, mousePos);
+
+MIDI_CountEvts(take, noteCount, CCEnvCount, TextSyxEvtCount);
+
+i = 0;
+loop (noteCount,
+    MIDI_GetNote(take, i, selected, muted, startppqpos, endppqpos, channel, pitch, velocity);
+    !selected && mousePPQ > startppqpos && mousePPQ < endppqpos ? (
+        MIDI_SetNote(take, i, 1, muted, startppqpos, endppqpos, channel, pitch, velocity);
+    );
+    i += 1;
+);

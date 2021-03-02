@@ -10,6 +10,9 @@ A separate branch for WIP (Works in progress) will be for all the scripts that a
 ### Arrange View Item Lasso Tool
 Select all your items in whatever shape you want!  Just hold down the key assigned to the script and move the mouse!  (The first time you will need to select "Create a new instance" and make sure "Remember my choice" is checked)
 
+### Select Chord Notes Above, Below and Under Mouse Cursor
+This will select all the notes that cover the x coordinate of the mouse.  It can be used to select chords very easily.  Additionally there are scripts for adding to and subtracting from selection.  This way you can bind a key to each!  E.g 'c' for selecting the chord and 'Shift + c' for adding to selection.
+
 ### Hold Button Script Template
 Part of the development for the lasso tool included making a new way of making scripts in REAPER.  Using the template provided, it is easy to design scripts that allow for holding buttons down as their interaction.  This is necessary for scripts such as the Lasso Tool, but can be applied to anything!  There are three customisable functions at the top:
 - What to do on initial button press
@@ -26,7 +29,7 @@ Provided in "ScriptingTools/Night_EEL Extended String Functions.eel":
   - substring() has to calculate the length first so this function is ever so slightly quicker
 - **`substring(indexStart, indexEnd, inputString)`**
   - Get substring of string defined by start and end indexes
-  
+
 ### Place Duplicate of First Item on Track
 Located at *"Items/Night_Place duplicate of first item on track at mouse cursor.eel"*, this is incredibly handy when working with percussion or many samples in REAPER.  Binding this to a key means that you can press the key on a track to place another snare/kick/hat item or whatever that track is used for under the mouse cursor.  *Yes, it does place it properly on the grid!*  **No more continuous item duplicating!**
 
