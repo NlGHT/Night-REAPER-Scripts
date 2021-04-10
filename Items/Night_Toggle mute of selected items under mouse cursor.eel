@@ -1,0 +1,7 @@
+Undo_BeginBlock2(0);
+
+item = BR_ItemAtMouseCursor();
+SetMediaItemInfo_Value(item, "B_MUTE", 1 - GetMediaItemInfo_Value(item, "B_MUTE"));
+UpdateArrange();
+
+Undo_EndBlock2(0, "Toggle mute under mouse cursor", 0);
