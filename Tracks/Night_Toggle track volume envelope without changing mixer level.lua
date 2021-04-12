@@ -7,7 +7,7 @@ if reaper.CountSelectedTracks( 0 ) == 1 then
   reaper.Main_OnCommand(40406, 0)
   reaper.SetMediaTrackInfo_Value(track, "D_VOL", vol)
 end
-reaper.Undo_EndBlock("Toggle volume envelope without changing mixer", 0)
+reaper.Undo_EndBlock("Toggle volume envelope without changing mixer", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 

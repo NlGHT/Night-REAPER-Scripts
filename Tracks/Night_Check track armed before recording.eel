@@ -49,4 +49,4 @@ track_armed == 0 ? (
 	);
 );
 
-Undo_EndBlock2(0, "Record with check", 0);
+Undo_EndBlock2(0, "Record with check", -1);

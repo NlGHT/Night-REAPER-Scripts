@@ -62,7 +62,7 @@ while(tracks[i] > 0) (
 );
 
 PreventUIRefresh(-1);
-Undo_EndBlock2(0, "Delete every second item on tracks", 0);
+Undo_EndBlock2(0, "Delete every second item on tracks", -1);
 
 freembuf(0);
 UpdateArrange();

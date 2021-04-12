@@ -18,5 +18,5 @@ loop(take_count,
 	i += 1;
 );
 Main_OnCommand(40362, 0); // Glue items, ignoring time selection
-Undo_EndBlock("Explode takes in order and glue them", 0);
+Undo_EndBlock("Explode takes in order and glue them", -1);
 PreventUIRefresh(-1);

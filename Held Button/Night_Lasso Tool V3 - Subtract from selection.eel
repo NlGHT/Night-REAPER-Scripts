@@ -319,7 +319,7 @@ function end_tasks() local(trackCount, i, stringTrack, j, latestCommaPosition, c
 	DeleteExtState(sectioncode, "previous_track", 1);
 	DeleteExtState(sectioncode, "previous_mouse_position", 1);
 	UpdateArrange();
-	Undo_EndBlock("Lasso tool", 0);
+	Undo_EndBlock("Lasso tool", -1);
 );
 
 
