@@ -1,0 +1,41 @@
+Undo_BeginBlock();
+
+item       = GetSelectedMediaItem(0, 0);
+#itemChunk = "";
+GetItemStateChunk(item, #itemChunk, 0);
+
+track      = GetMediaItemTrack(item);
+trackAbove = GetTrack(0, GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") - 2);
+
+function deleteAllItemsOnTrack(track) local(i, it) (
+    i = 0;
+    loop(CountTrackMediaItems(track),
+        it = GetTrackMediaItem(track, i);
+        DeleteTrackMediaItem(track, it);
+
+        i += 1;
+    );
+);
+
+function placeItemAtLocation(track, location) local(newItem) (
+    newItem = AddMediaItemToTrack(track);
+    SetItemStateChunk(newItem, #itemChunk, 0);
+    SetMediaItemInfo_Value(newItem, "D_POSITION", location);
+);
+
+trackAbove ? (
+    deleteAllItemsOnTrack(track);
+
+    i = 0;
+    loop(CountTrackMediaItems(trackAbove),
+        it      = GetTrackMediaItem(trackAbove, i);
+        itemPos = GetMediaItemInfo_Value(it, "D_POSITION");
+        placeItemAtLocation(track, itemPos);
+
+        i += 1;
+    );
+
+    UpdateArrange();
+);
+
+Undo_EndBlock("Place selected item in style of items on track above", 1);
