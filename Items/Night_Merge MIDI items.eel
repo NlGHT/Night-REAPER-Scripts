@@ -1,0 +1,40 @@
+Undo_BeginBlock2(0);
+PreventUIRefresh(1);
+
+amountMIDI = 0;
+i = 0;
+loop(CountSelectedMediaItems(0),
+    item = GetSelectedMediaItem(0, i);
+    take = GetActiveTake(item);
+    TakeIsMIDI(take) ? (
+        mem[amountMIDI] = take;
+        amountMIDI += 1;
+    );
+    i += 1;
+);
+
+amountMIDI > 1 ? (
+    loop(amountMIDI - 1,
+        take = mem[amountMIDI - 1];
+        MIDI_CountEvts(take, iterNoteCount, ccevtcnt, textsyxevtcnt);
+
+        i = 0;
+        loop(iterNoteCount,
+            MIDI_GetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, vel);
+            MIDI_InsertNote(mem[0], selected, muted, startppqpos, endppqpos, chan, pitch, vel, 0);
+            i += 1;
+        );
+
+        MIDI_Sort(mem[0]);
+
+        it = GetMediaItemTake_Item(take);
+        tr = GetMediaItemTrack(it);
+        DeleteTrackMediaItem(tr, it);
+        amountMIDI -= 1;
+    );
+);
+
+PreventUIRefresh(-1);
+UpdateArrange();
+
+Undo_EndBlock2(0, "Merge MIDI items", -1);
