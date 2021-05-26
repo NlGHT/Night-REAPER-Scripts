@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # This script depends on my other script GetReaScriptAPI
-# Available at: https://github.com/NlGHT/dotfiles/blob/master/.bin/GetReaScriptAPI
+# Available at: https://github.com/NlGHT/Night-REAPER-Scripts/blob/master/Scripting%20Tools/GetReaScriptAPI
+#           or: https://github.com/NlGHT/dotfiles/blob/master/.bin/GetReaScriptAPI
 
 GetReaScriptAPI --eel --no-returns | \
     awk 'BEGIN { FS="[()]" }
