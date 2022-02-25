@@ -1,0 +1,158 @@
+buffer = 0.5;
+
+memTrackNames[0] = "Violin 1";
+memTrackNames[1] = "Violin 2";
+memTrackNames[2] = "Viola";
+memTrackNames[3] = "Celli";
+memTrackNames[4] = "Double Bass";
+maxInstrumentsCount = 5;
+
+function SetNoteMemory(i, muted, startppqpos, endppqpos, channel, pitch, velocity) (
+    memNoteData[i*6] = muted;
+    memNoteData[i*6+1] = startppqpos;
+    memNoteData[i*6+2] = endppqpos;
+    memNoteData[i*6+3] = channel;
+    memNoteData[i*6+4] = pitch;
+    memNoteData[i*6+5] = velocity;
+);
+
+function CompareNote(otherNote, muted, startppqpos, endppqpos, channel, pitch, velocity) (
+    otherStart = memNoteData[otherNote*6+1];
+    otherEnd = memNoteData[otherNote*6+2];
+    abs(otherStart - startppqpos) < buffer && abs(otherEnd - endppqpos) < buffer ? (
+        1;
+    ):(
+        0;
+    );
+);
+
+function memPass(item, take, count, groupCount, memGroups) local(selected, muted, startppqpos, endppqpos, channel, pitch, velocity, i, j) (
+    // Set the note data memory to start after the note group value memory
+    memNoteData = memGroups + count + 1;
+    // Initial note so that the loop can check without needing an if
+    MIDI_GetNote(take, 0, selected, muted, startppqpos, endppqpos, channel, pitch, velocity);
+    SetNoteMemory(0, muted, startppqpos, endppqpos, channel, pitch, velocity);
+
+    // Loop to check for notes
+    i = 1;
+    loop(count,
+        MIDI_GetNote(take, i, selected, muted, startppqpos, endppqpos, channel, pitch, velocity);
+        SetNoteMemory(i, muted, startppqpos, endppqpos, channel, pitch, velocity);
+
+        j = 0;
+        loop(i,
+            CompareNote(j, muted, startppqpos, endppqpos, channel, pitch, velocity) ? (
+                // If the note being looked back to is in stack with current note
+                memGroups[j] > 0 ? (
+                    // If previous note has group already, set current note to that croup
+                    memGroups[i] = memGroups[j];
+                ):(
+                    // If group hasn't been made yet
+                    groupCount += 1;
+                    memGroups[i] = groupCount;
+                    memGroups[j] = groupCount;
+                );
+            );
+
+            j += 1;
+        );
+
+        i += 1;
+    );
+
+    memNoteData;
+);
+
+function SetNewTrackValues(originalTrack, originalTrackNumber, newTrack, iterTrackNumber) (
+    // Set name from memory array allocated at start
+    GetSetMediaTrackInfo_String(newTrack, "S_NAME", memTrackNames[iterTrackNumber - originalTrackNumber], 1); // [TODO] CHECK REAL PARNAME
+
+);
+
+function CopyFXToNewTrack(originalTrack, newTrack) local(FXCount, FXiter) (
+    FXCount = TrackFX_GetCount(originalTrack);
+    FXiter = 0;
+    loop(FXCount,
+        TrackFX_CopyToTrack(originalTrack, FXiter, newTrack, FXiter, 0);
+
+        FXiter += 1;
+    );
+);
+
+function GenerateTracksAndMIDIItems(originalItem, groupCount) local(originalItemStart, originalItemEnd, track, trackNumber, iterTrackNumber, newTrack) (
+    originalItemStart = GetMediaItemInfo_Value(originalItem, "D_START"); // [TODO] CHECK REAL PARNAME
+    originalItemEnd = GetMediaItemInfo_Value(originalItem, "D_LENGTH") + originalItemStart; // [TODO] CHECK REAL PARNAME
+    track = GetMediaItemTrack(originalItem);
+    trackNumber = GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER");
+    iterTrackNumber = trackNumber;
+
+    loop(min(groupCount, 5),
+        // Only create up to 5 instruments
+        newTrack = InsertTrackAtIndex(iterTrackNumber, 1);
+        CreateNewMIDIItemInProj(newTrack, originalItemStart, originalItemEnd);
+        SetNewTrackValues(track, trackNumber, newTrack, iterTrackNumber);
+        /* CopyFXToNewTrack(track, newTrack); */
+        iterTrackNumber += 1;
+    );
+
+    // Return the first new track number (IDK)
+    trackNumber + 1;
+);
+
+function SendNoteToMIDI(startExtraTracks, noteidx, whereToGo) local(track, item, take, arrStart) (
+    track = GetTrack(0, startExtraTracks + whereToGo);
+    item = GetTrackMediaItem(track, 0);
+    take = GetTake(item, 0);
+    arrStart = 6 * noteidx;
+    MIDI_InsertNote(take, 0, memNoteData[arrStart], memNoteData[arrStart+1], memNoteData[arrStart+2], memNoteData[arrStart+3], memNoteData[arrStart+4], memNoteData[arrStart+5]);
+);
+
+function main() local(item, take, count) (
+    // Set the start of the groups memory to after the instrument strings
+    memGroups = maxInstrumentsCount;
+    groupCount = 0;
+    item = GetSelectedMediaItem(0, 0);
+    take = GetTake(item, 0);
+    TakeIsMIDI(take) ? (
+        // Is MIDI item
+        MIDI_CountEvts(take, count, cc, textsyxevtcnt); // Only use count
+        count > 1 ? (
+            // There is more than one note (Otherwise there's no point in doing anything)
+
+            // Set the start of memory to after the total number of available notes to set groups memNoteData
+            memNoteData = memPass(item, take, count, groupCount, memGroups);
+
+            groupCount > 1 ? (
+                // Only continue with script if polyphonic
+                startExtraTracks = GenerateTracksAndMIDIItems(item, groupCount);
+
+                whereToGo = -1;
+                groupNum = 0;
+                loop(groupCount,
+                    noteidx = 0;
+                    loop(count,
+                        // Assign each note descending down vertically by group ID
+                        memGroups[noteidx] == groupNum ? (
+                            // The note is in that group
+                            whereToGo += 1;
+                            SendNoteToMIDI(startExtraTracks, noteidx, whereToGo);
+                        );
+
+                        noteidx += 1;
+                    );
+
+                    groupNum += 1;
+                );
+            );
+        ):(
+            ShowConsoleMsg("No notes in selected MIDI item");
+        );
+    ):(
+        // Is NOT MIDI item
+        ShowConsoleMsg("Needs to be a MIDI item selected");
+    );
+);
+
+Undo_BeginBlock2(0);
+main();
+Undo_EndBlock2(0, "Split string voices to separate tracks", 0);
