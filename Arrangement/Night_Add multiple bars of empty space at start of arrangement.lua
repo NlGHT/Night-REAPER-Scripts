@@ -57,7 +57,7 @@ reaper.GetSet_ArrangeView2(0, true, math.floor(arrangeStart+0.5), math.floor(arr
 
 reaper.UpdateArrange()
 reaper.PreventUIRefresh(-1)
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 
 --[[
 

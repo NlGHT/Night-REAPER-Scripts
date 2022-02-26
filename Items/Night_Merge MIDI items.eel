@@ -37,4 +37,4 @@ amountMIDI > 1 ? (
 PreventUIRefresh(-1);
 UpdateArrange();
 
-Undo_EndBlock2(0, "Merge MIDI items", -1);
+Undo_EndBlock2(0, "Merge MIDI items", 0);

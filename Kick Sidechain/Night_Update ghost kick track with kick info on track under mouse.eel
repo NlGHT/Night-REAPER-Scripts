@@ -42,4 +42,4 @@ GKTID > -1 ? (
 );
 
 PreventUIRefresh(-1);
-Undo_EndBlock("Update ghost kicks", -1);
+Undo_EndBlock("Update ghost kicks", 0);

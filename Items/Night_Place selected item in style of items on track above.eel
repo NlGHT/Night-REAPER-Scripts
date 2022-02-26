@@ -38,4 +38,4 @@ trackAbove ? (
     UpdateArrange();
 );
 
-Undo_EndBlock("Place selected item in style of items on track above", -1);
+Undo_EndBlock("Place selected item in style of items on track above", 0);

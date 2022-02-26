@@ -19,6 +19,6 @@ for i = 0, selected_items_count-1  do
   
 end
 
-reaper.Undo_EndBlock("Toggle mute of selected items", -1)
+reaper.Undo_EndBlock("Toggle mute of selected items", 0)
 
 reaper.UpdateArrange()

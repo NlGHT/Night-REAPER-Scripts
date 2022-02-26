@@ -48,7 +48,7 @@ for i = 0, selected_items_count-1  do
   reaper.SetMediaItemInfo_Value(item, "D_VOL", vol_log)
   
 end -- ENDLOOP through selected items
-reaper.Undo_EndBlock("Randomise selected item volumes", -1)
+reaper.Undo_EndBlock("Randomise selected item volumes", 0)
 reaper.UpdateArrange()
 
 

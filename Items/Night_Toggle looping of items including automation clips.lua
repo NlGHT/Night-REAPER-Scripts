@@ -4,4 +4,4 @@ if reaper.GetSelectedEnvelope(0) then
 else
 	reaper.Main_OnCommand(40636,0); -- Item properties: Loop item source
 end
-reaper.Undo_EndBlock("Toggle Looping", -1);
+reaper.Undo_EndBlock("Toggle Looping", 0);
