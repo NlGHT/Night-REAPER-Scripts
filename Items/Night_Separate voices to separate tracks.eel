@@ -200,5 +200,5 @@ function main() local(item, take, count) (
 PreventUIRefresh(1);
 Undo_BeginBlock2(0);
 main();
-Undo_EndBlock2(0, "Split string voices to separate tracks", 0);
+Undo_EndBlock2(0, "Split string voices to separate tracks", -1);
 PreventUIRefresh(-1);
