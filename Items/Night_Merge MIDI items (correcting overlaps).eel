@@ -1,0 +1,88 @@
+@import ../../../X-Raym Scripts/Functions/X-Raym_Functions - console debug messages.eel
+debug = 1;
+clean = 1;
+
+Undo_BeginBlock2(0);
+
+amountMIDI = 0;
+i = 0;
+loop(CountSelectedMediaItems(0),
+    item = GetSelectedMediaItem(0, i);
+    take = GetActiveTake(item);
+    TakeIsMIDI(take) ? (
+        mem[amountMIDI] = take;
+        amountMIDI += 1;
+    );
+    i += 1;
+);
+
+function fixOverlappingNotes(selected, muted, startppqpos, endppqpos, chan, pitch, vel) local(i)
+(
+    i = 0;
+    while (i > -1 && i < mainNoteCount) (
+        MIDI_GetNote(mem[0], i, nselected, nmuted, nstartppqpos, nendppqpos, nchan, npitch, nvel);
+        pitch == npitch ? (
+            msg_s("same pitch");
+            startppqpos == nstartppqpos && endppqpos == nendppqpos ? (
+                msg_s("identical note");
+                i = -2; // Gets +1 increment later on
+            ):(
+                startppqpos >= nstartppqpos && startppqpos <= nendppqpos ? (
+                    msg_s("incoming start in note");
+                    // If incoming note start overlapping
+                    endppqpos > nendppqpos ? (
+                        msg_s("incoming start in note and end outside");
+                        MIDI_InsertNote(mem[0], selected, muted, nendppqpos, endppqpos, chan, pitch, vel, 1);
+                    );
+
+                    i = -2; // Gets +1 increment later on
+                ):(
+                    endppqpos < nendppqpos && endppqpos > startppqpos /*&& startppqpos > nstartppqpos*/ ? (
+                        msg_s("incoming end in note and start outside");
+                        MIDI_InsertNote(mem[0], selected, muted, startppqpos, nstartppqpos, chan, pitch, vel, 1);
+                        i = -2; // Gets +1 increment later on
+                    );
+                );
+            );
+        );
+
+        i += 1;
+    );
+
+    msg_d(i);
+
+    // If there are no overlapping notes
+    i == mainNoteCount ? (
+        MIDI_InsertNote(mem[0], selected, muted, startppqpos, endppqpos, chan, pitch, vel, 1);
+    );
+);
+
+amountMIDI > 1 ? (
+    loop(amountMIDI - 1,
+        take = mem[amountMIDI - 1];
+        MIDI_CountEvts(take, iterNoteCount, ccevtcnt, textsyxevtcnt);
+        MIDI_CountEvts(mem[0], mainNoteCount, ccevtcnt, textsyxevtcnt);
+
+        i = 0;
+        loop(iterNoteCount,
+            MIDI_GetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, vel);
+
+            // Fix overlapping notes
+            fixOverlappingNotes(selected, muted, startppqpos, endppqpos, chan, pitch, vel);
+
+            i += 1;
+        );
+
+        MIDI_Sort(mem[0]);
+
+        it = GetMediaItemTake_Item(take);
+        tr = GetMediaItemTrack(it);
+        DeleteTrackMediaItem(tr, it);
+        amountMIDI -= 1;
+    );
+);
+
+
+UpdateArrange();
+
+Undo_EndBlock2(0, "Change shit", -1);
