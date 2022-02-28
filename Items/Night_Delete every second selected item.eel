@@ -5,6 +5,7 @@ itemCount = CountSelectedMediaItems(0);
 tracksStored = 0;
 tracks[];
 function getUniqueTracks() local(lastTrackSaved, i, trackLoop, trackLoopNum, j, isTrackStored) (
+    // First do a pass to check what tracks need to be looped over in next step
 	lastTrackSaved = -1;
 	itemCount > 1 ? (
 		i = 0;
@@ -37,10 +38,11 @@ function getUniqueTracks() local(lastTrackSaved, i, trackLoop, trackLoopNum, j, 
 getUniqueTracks();
 
 
-function deleteSelectedItemsOnTracks() local(j, item, nextItem, trackInLoop) (
+function deleteSelectedItemsOnTracks() local(i, j, item, nextItem, trackInLoop) (
     i = 0;
     loop(tracksStored,
-        trackInLoop = GetTrack(0, tracks[i] - 1);
+        trackInLoop = GetTrack(0, tracks[i] - 1); // -1 is because REAPER tracks start at 0 here idk
+
         j = 0;
         loop(itemCount-1,
             item = GetSelectedMediaItem(0, j);
@@ -49,9 +51,6 @@ function deleteSelectedItemsOnTracks() local(j, item, nextItem, trackInLoop) (
                 nextItem = GetSelectedMediaItem(0, j+1);
                 GetMediaTrackInfo_Value(GetMediaItem_Track(nextItem), "IP_TRACKNUMBER") == GetMediaTrackInfo_Value(trackInLoop, "IP_TRACKNUMBER") ? (
                     DeleteTrackMediaItem(trackInLoop, nextItem);
-                ):(
-                    // Return 0 and exit loop once it no longer needs to loop
-                    0;
                 );
             );
 
