@@ -1,0 +1,37 @@
+function findParamID(paramSearchRegex, track, fxID)
+local(paramCount, iterParam, ret)
+(
+    paramCount = TrackFX_GetNumParams(track, fxID);
+    iterParam = 0;
+    #buf = "";
+    ret = -1;
+    while(
+        TrackFX_GetParamName(track, fxID, iterParam, #buf);
+        !matchi(paramSearchRegex, #buf) && iterParam < paramCount ? (
+            iterParam += 1;
+        ):(
+            ret = iterParam;
+            0;
+        );
+    );
+
+    ret;
+);
+
+Undo_BeginBlock2(0);
+PreventUIRefresh(-1);
+
+tr = GetSelectedTrack(0, 0);
+reapitchFXID = TrackFX_AddByName(tr, "ReaPitch", 0, 1);
+paramID = findParamID("*shift*cents*", tr, reapitchFXID);
+env = GetFXEnvelope(tr, reapitchFXID, paramID, 1); // Creates the envelope as well
+
+TrackFX_Show(tr, reapitchFXID, 2); // Hide the FX insert floating window
+
+tuneFXID = TrackFX_AddByName(tr, "Auto-Tune", 0, 0);
+tuneFXID > -1 ? (
+    TrackFX_CopyToTrack(tr, reapitchFXID, tr, tuneFXID, 1);
+);
+
+PreventUIRefresh(1); // Envelope won't show unless use this
+Undo_EndBlock2(0, "Add ReaPitch and show Shift (cents) envelope", 0);
